@@ -15,9 +15,7 @@ class ResNetwork(Network):
         input_layer = self.sizes[0]
         hidden_layer_2 = self.sizes[2]
 
-        # np.random.seed(self.random_state)
-        # self.params['W_res'] = np.random.rand(hidden_layer_2, input_layer) - 0.5
-        self.params['W_res'] = np.random.randn(hidden_layer_2, input_layer) * np.sqrt(1. / input_layer)
+        self.params['W_res'] = np.random.rand(hidden_layer_2, input_layer) - 0.5
 
     def _forward_pass(self: "ResNetwork", x_train: np.ndarray) -> np.ndarray:
         '''
