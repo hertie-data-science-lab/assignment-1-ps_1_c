@@ -38,8 +38,4 @@ class ResNetwork(Network):
         delta1 = np.dot(self.params['W2'].T, delta2) * self.activation_func_deriv(self.a1)
         grad_W1 = np.outer(delta1, self.x_input)  # residual connection derivative = 1
 
-<<<<<<< HEAD
         return {'W1': grad_W1, 'W2': grad_W2, 'W3': grad_W3}
-=======
-        return {'W1': grad_W1, 'W2': grad_W2, 'W3': grad_W3}
->>>>>>> 1244ec8c9eb572a2f3fddf0571a6a0206945e6c2
