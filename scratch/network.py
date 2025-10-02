@@ -20,6 +20,10 @@ class Network():
 
         self.params = self._initialize_weights()
 
+        # optional
+        self.train_accuracies = []
+        self.val_accuracies = []
+
 
     def _initialize_weights(self):
         # number of neurons in each layer
@@ -39,35 +43,102 @@ class Network():
         return params
 
 
-    def _forward_pass(self, x_train):
+    def _forward_pass(self: "Network", x_train: np.ndarray) -> np.ndarray:
         '''
-        TODO: Implement the forward propagation algorithm.
+        Forward propagation algorithm (Computes predictions by passing input data through the network layers.)
 
-        The method should return the output of the network.
+        Args:
+            x_train (np.ndarray): Input data for the forward pass.
+        
+        Returns:
+            np.ndarray: Output of the network after forward pass.
         '''
-        pass
+        x = x_train.reshape(-1, 1)  # reshape input to column vector
+        
+        # Layer 1
+        z1 = self.params['W1'] @ x # linear transformation
+        a1 = self.activation_func(z1) # apply activation function
+
+        # Layer 2
+        z2 = self.params['W2'] @ a1 # linear transformation
+        a2 = self.activation_func(z2) # apply activation function
+
+        # Output layer
+        z3 = self.params['W3'] @ a2 # linear transformation
+        a3 = self.output_func(z3) # apply output activation function
+
+        # Store for backpropagation
+        self.cache = {
+            'x': x, 'z1': z1, 'a1': a1,
+            'z2': z2, 'a2': a2,
+            'z3': z3, 'a3': a3
+        }
+
+        # Return the output
+        return a3
 
 
-    def _backward_pass(self, y_train, output):
-        '''
-        TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
+    def _backward_pass(self: "Network", y_train: np.ndarray, output: np.ndarray) -> dict:
+        """
+        Backpropagation algorithm (Computes gradients of loss with respect to weights using chain rule.)
 
-        The method should return a dictionary of the weight gradients which are used to update the weights in self._update_weights().
+        Args:
+            y_train (np.ndarray): True labels for the input data.
+            output (np.ndarray): Output from the forward pass.
+        
+        Returns:
+            dict: Gradients of weights and biases.
+        """
+        y = y_train.reshape(-1, 1) # Reshape target
+        a3 = output # network output from forward pass
+        a2 = self.cache['a2'] # activations from layer 2
+        a1 = self.cache['a1'] # activations from layer 1
+        x = self.cache['x'] # input data
 
-        '''
-        pass
+        # Output layer error (assuming MSE loss and softmax activation)
+        dz3 = self.cost_func_deriv(y, a3) * self.output_func_deriv(self.cache['z3'])
+        
+        # Compute weight gradient
+        dW3 = dz3 @ a2.T
+
+        # Hidden layer 2 error
+        dz2 = (self.params['W3'].T @ dz3) * self.activation_func_deriv(self.cache['z2'])
+        dW2 = dz2 @ a1.T
+
+        # Hidden layer 1 error
+        dz1 = (self.params['W2'].T @ dz2) * self.activation_func_deriv(self.cache['z1'])
+        
+        # Compute weight gradient
+        dW1 = dz1 @ x.T
+
+        # Store gradients
+        return {'dW1': dW1, 'dW2': dW2, 'dW3': dW3}
 
 
-    def _update_weights(self, weights_gradient, learning_rate):
-        '''
-        TODO: Update the network weights according to stochastic gradient descent.
-        '''
-        pass
+    def _update_weights(self: "Network", weights_gradient: dict, learning_rate: float) -> None:
+        """
+        Update weights and biases.
+
+        Args:
+            weights_gradient (dict): Gradients of weights and biases.
+            learning_rate (float): Learning rate for weight updates.
+
+        Returns: None
+        """
+        for key in self.params:
+            grad_key = 'd' + key  # e.g. W1 -> dW1, W_res -> dW_res
+            if grad_key in weights_gradient:
+                self.params[key] -= learning_rate * weights_gradient[grad_key]
+
 
 
     def _print_learning_progress(self, start_time, iteration, x_train, y_train, x_val, y_val):
         train_accuracy = self.compute_accuracy(x_train, y_train)
         val_accuracy = self.compute_accuracy(x_val, y_val)
+
+        self.train_accuracies.append(train_accuracy)
+        self.val_accuracies.append(val_accuracy)
+        
         print(
             f'Epoch: {iteration + 1}, ' \
             f'Training Time: {time.time() - start_time:.2f}s, ' \
@@ -85,13 +156,18 @@ class Network():
         return np.mean(predictions)
 
 
-    def predict(self, x):
+    def predict(self: "Network", x: np.ndarray) -> np.ndarray:
         '''
-        TODO: Implement the prediction making of the network.
-        The method should return the index of the most likeliest output class.
-        '''
-        pass
+        Make a prediction for a single input sample.
 
+        Args:
+            x (np.ndarray): Input data for prediction.
+
+        Returns:
+            np.ndarray: Index of the most likely output class.
+        '''
+        output = self._forward_pass(x)
+        return np.argmax(output)
 
 
     def fit(self, x_train, y_train, x_val, y_val, cosine_annealing_lr=False):

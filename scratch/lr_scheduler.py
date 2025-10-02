@@ -1,8 +1,14 @@
 import numpy as np
 
-def cosine_annealing(initial_lr, epoch, total_epochs, min_lr=0.0):
+def cosine_annealing(initial_lr: float, epoch: int, total_epochs: int, min_lr: float = 0.0) -> float:
     """
-    TODO: implement a cosine annealing learning rate scheduler.
+    Cosine annealing learning rate scheduler.
+
+    Effect:
+        - Learning rate starts high, allowing fast progress.
+        - Gradually decreases.
+        - Smooth cosine decay avoids abrupt changes that can destabilize training.
+        - Often improves convergence and final accuracy compared to constant learning rates.
     
     Args:
         initial_lr (float): Initial learning rate.
@@ -13,4 +19,6 @@ def cosine_annealing(initial_lr, epoch, total_epochs, min_lr=0.0):
     Returns:
         float: Adjusted learning rate for the current epoch.
     """
-    pass
+    cos_inner = np.pi * epoch / total_epochs
+    lr = min_lr + 0.5 * (initial_lr - min_lr) * (1 + np.cos(cos_inner))
+    return lr
