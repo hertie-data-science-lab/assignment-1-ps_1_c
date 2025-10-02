@@ -2,6 +2,7 @@ import time
 import numpy as np
 import scratch.utils as utils
 from scratch.lr_scheduler import cosine_annealing
+import math
 
 
 class Network():
@@ -40,30 +41,49 @@ class Network():
 
 
     def _forward_pass(self, x_train):
-        '''
-        TODO: Implement the forward propagation algorithm.
+    # store the input so we can use it in backprop
+        self.x_input = x_train
+    
+    # Hidden layer 1
+        self.a1 = np.dot(self.params['W1'], x_train)
+        self.h1 = self.activation_func(self.a1)
+    
+    # Hidden layer 2
+        self.a2 = np.dot(self.params['W2'], self.h1)
+        self.h2 = self.activation_func(self.a2)
 
-        The method should return the output of the network.
-        '''
-        pass
+    # Output layer
+        self.a3 = np.dot(self.params['W3'], self.h2)
+        self.output = self.output_func(self.a3)
+
+        return self.output
+
 
 
     def _backward_pass(self, y_train, output):
-        '''
-        TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
+    # Error at output
+        error = self.cost_func_deriv(y_train, output)
 
-        The method should return a dictionary of the weight gradients which are used to update the weights in self._update_weights().
+    # Gradient for W3
+        delta3 = error * self.output_func_deriv(self.a3)
+        grad_W3 = np.outer(delta3, self.h2)
 
-        '''
-        pass
+    # Gradient for W2
+        delta2 = np.dot(self.params['W3'].T, delta3) * self.activation_func_deriv(self.a2)
+        grad_W2 = np.outer(delta2, self.h1)
+
+    # Gradient for W1 (now uses self.x_input instead of undefined self.a_values)
+        delta1 = np.dot(self.params['W2'].T, delta2) * self.activation_func_deriv(self.a1)
+        grad_W1 = np.outer(delta1, self.x_input)
+
+        return {'W1': grad_W1, 'W2': grad_W2, 'W3': grad_W3}
+
 
 
     def _update_weights(self, weights_gradient, learning_rate):
-        '''
-        TODO: Update the network weights according to stochastic gradient descent.
-        '''
-        pass
-
+        # Update each weight matrix by subtracting (learning rate * gradient)
+        for key in self.params:
+            self.params[key] -= learning_rate * weights_gradient[key]
 
     def _print_learning_progress(self, start_time, iteration, x_train, y_train, x_val, y_val):
         train_accuracy = self.compute_accuracy(x_train, y_train)
@@ -86,12 +106,10 @@ class Network():
 
 
     def predict(self, x):
-        '''
-        TODO: Implement the prediction making of the network.
-        The method should return the index of the most likeliest output class.
-        '''
-        pass
-
+        # Run forward pass
+        output = self._forward_pass(x)
+        # Return index of largest probability which is biggest one 
+        return np.argmax(output)
 
 
     def fit(self, x_train, y_train, x_val, y_val, cosine_annealing_lr=False):
@@ -114,3 +132,5 @@ class Network():
                 self._update_weights(weights_gradient, learning_rate=learning_rate)
 
             self._print_learning_progress(start_time, iteration, x_train, y_train, x_val, y_val)
+
+
