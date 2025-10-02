@@ -131,4 +131,10 @@ class Network():
                 
                 self._update_weights(weights_gradient, learning_rate=learning_rate)
 
+<<<<<<< HEAD
             self._print_learning_progress(start_time, iteration, x_train, y_train, x_val, y_val)
+=======
+            self._print_learning_progress(start_time, iteration, x_train, y_train, x_val, y_val)
+
+
+>>>>>>> 1244ec8c9eb572a2f3fddf0571a6a0206945e6c2

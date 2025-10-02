@@ -64,6 +64,7 @@ class TorchNetwork(nn.Module):
             )
 
 
+<<<<<<< HEAD
     def predict(self, data):
         """
         Returns predicted labels or accuracy depending on input:
@@ -89,6 +90,20 @@ class TorchNetwork(nn.Module):
                 output = self._forward_pass(x)
                 _, predicted = torch.max(output, dim=1)
                 return predicted
+=======
+    def predict(self, data_loader):
+        correct = 0
+        total = 0
+        self.eval()
+        with torch.no_grad():
+            for x, y in data_loader:
+                x = self._flatten(x)
+                output = self._forward_pass(x)
+                _, predicted = torch.max(output, dim=1)
+                total += y.size(0)
+                correct += (predicted == y).sum().item()
+        return correct / total  # <-- scalar float
+>>>>>>> 1244ec8c9eb572a2f3fddf0571a6a0206945e6c2
 
 
     def fit(self, train_loader, val_loader):
