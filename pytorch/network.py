@@ -27,25 +27,25 @@ class TorchNetwork(nn.Module):
 
 
     def _forward_pass(self, x_train):
-        '''
-        TODO: Implement the forward propagation algorithm.
-        The method should return the output of the network.
-        '''
-        pass
+        # Pass through hidden layer 1
+        h1 = self.activation_func(self.linear1(x_train))
+        # Hidden layer 2
+        h2 = self.activation_func(self.linear2(h1))
+        # Output layer (softmax over 10 classes)
+        output = self.output_func(self.linear3(h2), dim=1)
+        return output
 
 
     def _backward_pass(self, y_train, output):
-        '''
-        TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
-        '''
-        pass
+        # Compute the loss (BCEWithLogitsLoss)
+        loss = self.loss_func(output, y_train.float())
+        # Backpropagate (compute gradients automatically)
+        loss.backward()
+        return loss
 
 
     def _update_weights(self):
-        '''
-        TODO: Update the network weights according to stochastic gradient descent.
-        '''
-        pass
+        self.optimizer.step()
 
 
     def _flatten(self, x):
@@ -64,13 +64,31 @@ class TorchNetwork(nn.Module):
             )
 
 
-    def predict(self, x):
-        '''
-        TODO: Implement the prediction making of the network.
-
-        The method should return the index of the most likeliest output class.
-        '''
-        pass
+    def predict(self, data):
+        """
+        Returns predicted labels or accuracy depending on input:
+        - If input is a DataLoader, returns accuracy (scalar float)
+        - If input is a tensor batch, returns predicted labels (tensor)
+        """
+        self.eval()
+        with torch.no_grad():
+            if isinstance(data, torch.utils.data.DataLoader):
+                # Compute accuracy
+                correct = 0
+                total = 0
+                for x, y in data:
+                    x = self._flatten(x)
+                    output = self._forward_pass(x)
+                    _, predicted = torch.max(output, dim=1)
+                    total += y.size(0)
+                    correct += (predicted == y).sum().item()
+                return correct / total
+            else:
+                # Single batch tensor -> return predicted labels
+                x = self._flatten(data)
+                output = self._forward_pass(x)
+                _, predicted = torch.max(output, dim=1)
+                return predicted
 
 
     def fit(self, train_loader, val_loader):
