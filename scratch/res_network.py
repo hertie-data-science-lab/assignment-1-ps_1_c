@@ -3,79 +3,66 @@ import numpy as np
 from scratch.network import Network
 
 class ResNetwork(Network):
+    """
+    Feed-forward network with a residual connection from hidden layer 1 to hidden layer 2.
+    Inherits from Network in scratch.network.
+    """
+
     def __init__(self, sizes, epochs=50, learning_rate=0.01, random_state=1):
         super().__init__(sizes, epochs=epochs, learning_rate=learning_rate, random_state=random_state)
-        
-        # Residual connection: input -> hidden layer 2
-        input_layer = self.sizes[0]
-        hidden_layer_2 = self.sizes[2]
 
-        self.params['W_res'] = np.random.rand(hidden_layer_2, input_layer) - 0.5
-
-    def _forward_pass(self: "ResNetwork", x_train: np.ndarray) -> np.ndarray:
-        '''
-        Forward propagation algorithm.
-
-        Args:
-            x_train (np.ndarray): Input data for the forward pass.
-        Returns:
-            np.ndarray: Output of the network after forward pass.
-        '''
-        # Reshape input
-        x = x_train.reshape(-1, 1)
+    def _forward_pass(self, x_train):
+        """
+        Forward propagation with residual connection.
+        Adds hidden layer 1 activation (A1) to hidden layer 2 pre-activation (Z2).
+        """
+        x = x_train.reshape(-1, 1)  # column vector
 
         # Layer 1
-        z1 = self.params['W1'] @ x
-        a1 = self.activation_func(z1)
+        Z1 = self.params['W1'] @ x
+        A1 = self.activation_func(Z1)
 
         # Layer 2 with residual connection
-        z2 = self.params['W2'] @ a1 + self.params['W_res'] @ x # skip connection from input → hidden layer 2
-        a2 = self.activation_func(z2)
+        Z2 = self.params['W2'] @ A1 + A1  # residual connection
+        A2 = self.activation_func(Z2)
 
         # Output layer
-        z3 = self.params['W3'] @ a2
-        a3 = self.output_func(z3)
+        Z3 = self.params['W3'] @ A2
+        A3 = self.output_func(Z3)
 
-        # Store for backprop
+        # Cache for backprop
         self.cache = {
-            'x': x, 'z1': z1, 'a1': a1,
-            'z2': z2, 'a2': a2,
-            'z3': z3, 'a3': a3
+            'x': x,
+            'Z1': Z1, 'A1': A1,
+            'Z2': Z2, 'A2': A2,
+            'Z3': Z3, 'A3': A3
         }
+        return A3
 
-        return a3
-
-
-    def _backward_pass(self: "ResNetwork", y_train: np.ndarray, output: np.ndarray) -> dict:
-        '''
-        Backpropagation algorithm (responsible for updating the weights of the neural network).
-
-        Args:
-            y_train (np.ndarray): True labels for the input data.
-            output (np.ndarray): Output from the forward pass.
-        Returns:
-            dict: Gradients of weights including residual connection.
-        '''
-        # Reshape target
+    def _backward_pass(self, y_train, output):
+        """
+        Backpropagation including residual connection.
+        Computes gradients of weights for all layers.
+        """
         y = y_train.reshape(-1, 1)
-        a3 = output
-        a2 = self.cache['a2']
-        a1 = self.cache['a1']
+        A3 = output
+        A2 = self.cache['A2']
+        A1 = self.cache['A1']
         x = self.cache['x']
 
-        # Output layer error
-        dz3 = self.cost_func_deriv(y, a3) * self.output_func_deriv(self.cache['z3'])
-        dW3 = dz3 @ a2.T
+        # Output layer
+        dA3 = self.cost_func_deriv(y, A3)
+        dZ3 = dA3 * self.output_func_deriv(self.cache['Z3'])
+        dW3 = dZ3 @ A2.T
 
-        # Hidden layer 2 error (includes residual)
-        dz2 = (self.params['W3'].T @ dz3) * self.activation_func_deriv(self.cache['z2'])
-        dW2 = dz2 @ a1.T
-        dW_res = dz2 @ x.T   # residual gradient
+        # Hidden layer 2 with residual
+        dA2 = self.params['W3'].T @ dZ3
+        dZ2 = dA2 * self.activation_func_deriv(self.cache['Z2'])
+        dW2 = dZ2 @ A1.T
 
-        # Hidden layer 1 error
-        dz1 = (self.params['W2'].T @ dz2) * self.activation_func_deriv(self.cache['z1'])
-        dW1 = dz1 @ x.T
+        # Backprop to A1: two paths (through W2 and through residual)
+        dA1 = self.params['W2'].T @ dZ2 + dZ2
+        dZ1 = dA1 * self.activation_func_deriv(self.cache['Z1'])
+        dW1 = dZ1 @ x.T
 
-        return {'dW1': dW1, 'dW2': dW2, 'dW3': dW3, 'dW_res': dW_res}
-
-
+        return {'dW1': dW1, 'dW2': dW2, 'dW3': dW3}
