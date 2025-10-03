@@ -18,7 +18,7 @@ def cosine_annealing(initial_lr: float, epoch: int, total_epochs: int, min_lr: f
         
     Returns:
         float: Adjusted learning rate for the current epoch.
-    """
+    """  
     cos_inner = np.pi * epoch / total_epochs
     lr = min_lr + 0.5 * (initial_lr - min_lr) * (1 + np.cos(cos_inner))
     return lr

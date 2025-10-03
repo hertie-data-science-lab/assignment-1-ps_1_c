@@ -3,13 +3,8 @@ import numpy as np
 from scratch.network import Network
 
 class ResNetwork(Network):
-
-
     def __init__(self, sizes, epochs=50, learning_rate=0.01, random_state=1):
         super().__init__(sizes, epochs=epochs, learning_rate=learning_rate, random_state=random_state)
-
-        # check whether properly initialized
-        # ...
         
         # Residual connection: input -> hidden layer 2
         input_layer = self.sizes[0]
@@ -51,7 +46,7 @@ class ResNetwork(Network):
         return a3
 
 
-    def _backward_pass(self, y_train, output):
+    def _backward_pass(self: "ResNetwork", y_train: np.ndarray, output: np.ndarray) -> dict:
         '''
         Backpropagation algorithm (responsible for updating the weights of the neural network).
 

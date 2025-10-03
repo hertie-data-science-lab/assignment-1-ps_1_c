@@ -39,12 +39,14 @@ class TorchNetwork(nn.Module):
         Returns:
             torch.Tensor: Output of the network after forward pass.
         '''
-        # Apply activation function and linear transformation
-        x = self.activation_func(self.linear1(x_train))
-        x = self.activation_func(self.linear2(x)) 
+        # Pass through layer 1
+        x = self.activation_func(self.linear1(x_train)) # Apply activation function and linear transformation
+        
+        # Pass through layer 2
+        x = self.activation_func(self.linear2(x)) # Apply activation function and linear transformation
 
-        # Output layer (no activation function here, as BCEWithLogitsLoss expects raw logits)
-        x = self.linear3(x)
+        # Output layer
+        x = self.output_func(self.linear3(x), dim=1) # Apply output function and linear transformation
         return x
 
 
@@ -77,6 +79,7 @@ class TorchNetwork(nn.Module):
         train_accuracy = self.compute_accuracy(train_loader)
         val_accuracy = self.compute_accuracy(val_loader)
 
+        # Optional store accuracies for plotting later
         self.train_accuracies.append(train_accuracy)
         self.val_accuracies.append(val_accuracy)
 

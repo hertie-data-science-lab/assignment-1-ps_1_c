@@ -95,24 +95,25 @@ class Network():
         a1 = self.cache['a1'] # activations from layer 1
         x = self.cache['x'] # input data
 
-        # Output layer error (assuming MSE loss and softmax activation)
-        dz3 = self.cost_func_deriv(y, a3) * self.output_func_deriv(self.cache['z3'])
+        # Error at output layer
+        error = self.cost_func_deriv(y, a3)
+        dz3 = error * self.output_func_deriv(self.cache['z3'])
         
         # Compute weight gradient
-        dW3 = dz3 @ a2.T
+        grad_W3 = dz3 @ a2.T
 
         # Hidden layer 2 error
         dz2 = (self.params['W3'].T @ dz3) * self.activation_func_deriv(self.cache['z2'])
-        dW2 = dz2 @ a1.T
+        grad_W2 = dz2 @ a1.T
 
         # Hidden layer 1 error
         dz1 = (self.params['W2'].T @ dz2) * self.activation_func_deriv(self.cache['z1'])
         
         # Compute weight gradient
-        dW1 = dz1 @ x.T
+        grad_W1 = dz1 @ x.T
 
         # Store gradients
-        return {'dW1': dW1, 'dW2': dW2, 'dW3': dW3}
+        return {'dW1': grad_W1, 'dW2': grad_W2, 'dW3': grad_W3}
 
 
     def _update_weights(self: "Network", weights_gradient: dict, learning_rate: float) -> None:
@@ -126,7 +127,7 @@ class Network():
         Returns: None
         """
         for key in self.params:
-            grad_key = 'd' + key  # e.g. W1 -> dW1, W_res -> dW_res
+            grad_key = 'd' + key
             if grad_key in weights_gradient:
                 self.params[key] -= learning_rate * weights_gradient[grad_key]
 
@@ -136,9 +137,10 @@ class Network():
         train_accuracy = self.compute_accuracy(x_train, y_train)
         val_accuracy = self.compute_accuracy(x_val, y_val)
 
+        # Append accuracies to lists for plotting later
         self.train_accuracies.append(train_accuracy)
         self.val_accuracies.append(val_accuracy)
-        
+
         print(
             f'Epoch: {iteration + 1}, ' \
             f'Training Time: {time.time() - start_time:.2f}s, ' \
