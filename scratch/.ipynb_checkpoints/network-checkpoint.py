@@ -44,28 +44,8 @@ class Network():
         TODO: Implement the forward propagation algorithm.
 
         The method should return the output of the network.
-
-        Forward propagation: compute activations for each layer.
-        Stores intermediate results in self.cache for use in backprop.
         '''
-        x = x_train.reshape(-1, 1)  # column vector
-
-        Z1 = self.params['W1'] @ x
-        A1 = self.activation_func(Z1)
-
-        Z2 = self.params['W2'] @ A1
-        A2 = self.activation_func(Z2)
-
-        Z3 = self.params['W3'] @ A2
-        A3 = self.output_func(Z3)
-
-        self.cache = {
-            'x': x,
-            'Z1': Z1, 'A1': A1,
-            'Z2': Z2, 'A2': A2,
-            'Z3': Z3, 'A3': A3
-        }
-        return A3
+        pass
 
 
     def _backward_pass(self, y_train, output):
@@ -74,43 +54,16 @@ class Network():
 
         The method should return a dictionary of the weight gradients which are used to update the weights in self._update_weights().
 
-        Backpropagation: compute gradients of weights.
         '''
-        y = y_train.reshape(-1, 1)
-        A3 = output
-        A2 = self.cache['A2']
-        A1 = self.cache['A1']
-        x = self.cache['x']
+        pass
 
-        # Derivative of cost wrt output
-        dA3 = self.cost_func_deriv(y, A3)
-
-        # Output layer
-        dZ3 = dA3 * self.output_func_deriv(self.cache['Z3'])
-        dW3 = dZ3 @ A2.T
-
-        # Hidden layer 2
-        dA2 = self.params['W3'].T @ dZ3
-        dZ2 = dA2 * self.activation_func_deriv(self.cache['Z2'])
-        dW2 = dZ2 @ A1.T
-
-        # Hidden layer 1
-        dA1 = self.params['W2'].T @ dZ2
-        dZ1 = dA1 * self.activation_func_deriv(self.cache['Z1'])
-        dW1 = dZ1 @ x.T
-
-        grads = {'dW1': dW1, 'dW2': dW2, 'dW3': dW3}
-        return grads
 
     def _update_weights(self, weights_gradient, learning_rate):
         '''
         TODO: Update the network weights according to stochastic gradient descent.
-        
-        Update weights with SGD.
         '''
-        self.params['W1'] -= learning_rate * weights_gradient['dW1']
-        self.params['W2'] -= learning_rate * weights_gradient['dW2']
-        self.params['W3'] -= learning_rate * weights_gradient['dW3']
+        pass
+
 
     def _print_learning_progress(self, start_time, iteration, x_train, y_train, x_val, y_val):
         train_accuracy = self.compute_accuracy(x_train, y_train)
@@ -136,42 +89,28 @@ class Network():
         '''
         TODO: Implement the prediction making of the network.
         The method should return the index of the most likeliest output class.
-
-         Run forward pass and return the predicted class index.
         '''
-        probs = self._forward_pass(x)
-        return int(np.argmax(probs))
-    
+        pass
+
+
+
     def fit(self, x_train, y_train, x_val, y_val, cosine_annealing_lr=False):
+
         start_time = time.time()
-        history = {"train_acc": [], "val_acc": []}   # define ONCE
-    
+
         for iteration in range(self.epochs):
             for x, y in zip(x_train, y_train):
+                
                 if cosine_annealing_lr:
-                    learning_rate = cosine_annealing(
-                        self.learning_rate, iteration, len(x_train), self.learning_rate
-                    )
-                else:
+                    learning_rate = cosine_annealing(self.learning_rate, 
+                                                     iteration, 
+                                                     len(x_train), 
+                                                     self.learning_rate)
+                else: 
                     learning_rate = self.learning_rate
-    
                 output = self._forward_pass(x)
                 weights_gradient = self._backward_pass(y, output)
+                
                 self._update_weights(weights_gradient, learning_rate=learning_rate)
-    
-            # compute accuracies at the end of epoch
-            train_accuracy = self.compute_accuracy(x_train, y_train)
-            val_accuracy = self.compute_accuracy(x_val, y_val)
-    
-            # append results
-            history["train_acc"].append(train_accuracy)
-            history["val_acc"].append(val_accuracy)
-    
-            # print results
-            self._print_learning_progress(start_time, iteration, x_train, y_train, x_val, y_val)
 
-        print(" ")
-        print(f"The training accuracy is {history['train_acc'][-1]*100:.2f}%")
-        print(f"The validation accuracy is {history['val_acc'][-1]*100:.2f}%")
-    
-        return history
+            self._print_learning_progress(start_time, iteration, x_train, y_train, x_val, y_val)

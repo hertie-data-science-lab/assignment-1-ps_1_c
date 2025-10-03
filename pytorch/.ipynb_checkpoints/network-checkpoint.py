@@ -30,36 +30,22 @@ class TorchNetwork(nn.Module):
         '''
         TODO: Implement the forward propagation algorithm.
         The method should return the output of the network.
-        
-        Forward propagation: return raw logits (no softmax).
-        Hidden layers: sigmoid activations; output: linear.
         '''
-        h1 = self.activation_func(self.linear1(x_train))
-        h2 = self.activation_func(self.linear2(h1))
-        logits = self.linear3(h2)
-        
-        return logits
+        pass
 
 
     def _backward_pass(self, y_train, output):
         '''
         TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
-
-
-        Backpropagation: compute loss and gradients.
-        y_train is one-hot; cast to float for BCEWithLogitsLoss.
         '''
-        loss = self.loss_func(output, y_train.float())
-        loss.backward()
+        pass
 
 
     def _update_weights(self):
         '''
         TODO: Update the network weights according to stochastic gradient descent.
-
-        SGD parameter update.
         '''
-        self.optimizer.step()
+        pass
 
 
     def _flatten(self, x):
@@ -83,21 +69,12 @@ class TorchNetwork(nn.Module):
         TODO: Implement the prediction making of the network.
 
         The method should return the index of the most likeliest output class.
-        Predict the most likely class index for each sample.
         '''
-        self.eval()
-        with torch.no_grad():
-            x = self._flatten(x)
-            logits = self._forward_pass(x)
-            probs = self.output_func(logits, dim=1)  # softmax over classes
-            pred = torch.argmax(probs, dim=1)
-        self.train()
-        return pred
+        pass
 
 
     def fit(self, train_loader, val_loader):
         start_time = time.time()
-        history = {"train_acc": [], "val_acc": []}
 
         for iteration in range(self.epochs):
             for x, y in train_loader:
@@ -110,21 +87,9 @@ class TorchNetwork(nn.Module):
                 self._backward_pass(y, output)
                 self._update_weights()
 
-            # compute accuracies at the end of epoch
-            train_accuracy = self.compute_accuracy(train_loader)
-            val_accuracy = self.compute_accuracy(val_loader)
-    
-            # append results
-            history["train_acc"].append(train_accuracy)
-            history["val_acc"].append(val_accuracy)
-            
             self._print_learning_progress(start_time, iteration, train_loader, val_loader)
-            
-        print(" ")
-        print(f"The training accuracy is {history['train_acc'][-1]*100:.2f}%")
-        print(f"The validation accuracy is {history['val_acc'][-1]*100:.2f}%")
-        
-        return history
+
+
 
 
     def compute_accuracy(self, data_loader):
@@ -134,5 +99,3 @@ class TorchNetwork(nn.Module):
             correct += torch.sum(torch.eq(pred, y))
 
         return correct / len(data_loader.dataset)
-
-
